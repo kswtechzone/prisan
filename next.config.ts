@@ -4,12 +4,10 @@ const nextConfig: NextConfig = {
   output: "standalone",
 
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-    ],
+    deviceSizes: [480, 768, 1024],
+    imageSizes: [64, 128, 256],
+    formats: ["image/webp"],
+    minimumCacheTTL: 86400,
   },
 
   experimental: {
