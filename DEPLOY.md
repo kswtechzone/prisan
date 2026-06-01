@@ -120,3 +120,22 @@ echo "✓ Deploy complete"
 ```
 
 Then run: `bash deploy.sh`
+
+# 1. Clear out old build cache and recompile
+rm -rf .next
+npm run build
+
+# 2. Sync your standalone workspace assets
+rm -rf .next/standalone/public .next/standalone/.next/static
+mkdir -p .next/standalone/public
+mkdir -p .next/standalone/.next/static
+
+cp -r public/* .next/standalone/public/
+cp -r .next/static/* .next/standalone/.next/static/
+
+# 3. Restore your dynamic persistent folder symlink shortcut
+rm -rf .next/standalone/public/uploads
+ln -s /home/kswms/apps/prisan/public/uploads /home/kswms/apps/prisan/.next/standalone/public/uploads
+
+# 4. Restart the runtime process on port 3005
+PORT=3005 pm2 restart prisan
