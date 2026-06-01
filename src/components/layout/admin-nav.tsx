@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import Image from "next/image"
-import { LayoutDashboard, CalendarDays, Scissors, Users, Image as ImageIcon, LogOut } from "lucide-react"
+import { LayoutDashboard, CalendarDays, Scissors, Users, Image as ImageIcon, HelpCircle, Search, FileText, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { logoutAction } from "@/lib/actions"
 
@@ -13,6 +13,9 @@ const adminLinks = [
   { href: "/admin/services", label: "Services", icon: Scissors },
   { href: "/admin/stylists", label: "Stylists", icon: Users },
   { href: "/admin/gallery", label: "Gallery", icon: ImageIcon },
+  { href: "/admin/blog", label: "Blog", icon: FileText },
+  { href: "/admin/faqs", label: "FAQs", icon: HelpCircle },
+  { href: "/admin/seo", label: "SEO", icon: Search },
 ]
 
 export function AdminNav() {
@@ -27,7 +30,7 @@ export function AdminNav() {
   return (
     <aside className="w-64 min-h-screen bg-luxury-charcoal text-white p-6 hidden md:flex flex-col">
       <Link href="/admin" className="flex items-center gap-3 mb-8">
-        <Image src="/pblogo.png" alt="PB Logo" width={32} height={32} className="rounded-lg" />
+        <Image src="/prisanbeautylogo.png" alt="PB Logo" width={32} height={32} className="rounded-lg" unoptimized />
         <span className="font-display text-lg">Admin Panel</span>
       </Link>
 

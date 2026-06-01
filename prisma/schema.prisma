@@ -74,6 +74,50 @@ model GalleryImage {
   @@map("gallery_images")
 }
 
+model BlogPost {
+  id           String    @id @default(cuid())
+  title        String
+  slug         String    @unique
+  content      String
+  excerpt      String?
+  image        String?
+  author       String    @default("Admin")
+  published    Boolean   @default(false)
+  metaTitle    String?
+  metaDescription String?
+  metaKeywords String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@map("blog_posts")
+}
+
+model Faq {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String   @default("general")
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("faqs")
+}
+
+model SeoMeta {
+  id        String   @id @default(cuid())
+  page      String   @unique
+  title     String?
+  description String?
+  keywords  String?
+  ogImage   String?
+  schemaJson String?
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("seo_meta")
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique

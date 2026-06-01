@@ -9,7 +9,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <Image src="/pblogo.png" alt="PB Logo" width={36} height={36} className="rounded-lg" />
+              <Image src="/prisanbeautylogo.png" alt="PB Logo" width={36} height={36} className="rounded-lg" unoptimized />
               <span className="text-xl font-display font-semibold">
                 Prisan Beauty
               </span>

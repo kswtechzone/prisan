@@ -126,7 +126,7 @@ function BookingForm() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-10">
           <div className="flex justify-center mb-4">
-            <Image src="/pblogo.png" alt="PB Logo" width={56} height={56} className="rounded-2xl" />
+            <Image src="/prisanbeautylogo.png" alt="PB Logo" width={56} height={56} className="rounded-2xl" unoptimized />
           </div>
           <h1 className="text-3xl md:text-4xl font-display font-bold text-luxury-charcoal mb-4">
             Schedule Your Visit

@@ -275,3 +275,142 @@ export async function deleteGalleryImage(id: string) {
   revalidatePath("/admin/gallery")
   revalidatePath("/gallery")
 }
+
+// ── FAQ ──
+
+export async function getFaqs() {
+  return prisma.faq.findMany({ orderBy: { order: "asc" } })
+}
+
+export async function getActiveFaqs() {
+  return prisma.faq.findMany({
+    where: { active: true },
+    orderBy: { order: "asc" },
+  })
+}
+
+export async function createFaq(data: {
+  question: string
+  answer: string
+  category?: string
+  order?: number
+}) {
+  await requireAdmin()
+  await prisma.faq.create({ data })
+  revalidatePath("/admin/faqs")
+  revalidatePath("/faq")
+}
+
+export async function updateFaq(
+  id: string,
+  data: {
+    question?: string
+    answer?: string
+    category?: string
+    order?: number
+    active?: boolean
+  }
+) {
+  await requireAdmin()
+  await prisma.faq.update({ where: { id }, data })
+  revalidatePath("/admin/faqs")
+  revalidatePath("/faq")
+}
+
+export async function deleteFaq(id: string) {
+  await requireAdmin()
+  await prisma.faq.delete({ where: { id } })
+  revalidatePath("/admin/faqs")
+  revalidatePath("/faq")
+}
+
+// ── Blog ──
+
+export async function getBlogPosts() {
+  return prisma.blogPost.findMany({ orderBy: { createdAt: "desc" } })
+}
+
+export async function getPublishedBlogPosts() {
+  return prisma.blogPost.findMany({
+    where: { published: true },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+export async function getBlogPost(slug: string) {
+  return prisma.blogPost.findUnique({ where: { slug } })
+}
+
+export async function createBlogPost(data: {
+  title: string
+  slug: string
+  content: string
+  excerpt?: string
+  image?: string
+  author?: string
+  metaTitle?: string
+  metaDescription?: string
+  metaKeywords?: string
+}) {
+  await requireAdmin()
+  await prisma.blogPost.create({ data })
+  revalidatePath("/admin/blog")
+  revalidatePath("/blog")
+}
+
+export async function updateBlogPost(
+  id: string,
+  data: {
+    title?: string
+    slug?: string
+    content?: string
+    excerpt?: string
+    image?: string
+    author?: string
+    published?: boolean
+    metaTitle?: string
+    metaDescription?: string
+    metaKeywords?: string
+  }
+) {
+  await requireAdmin()
+  await prisma.blogPost.update({ where: { id }, data })
+  revalidatePath("/admin/blog")
+  revalidatePath("/blog")
+  revalidatePath(`/blog/${data.slug || ""}`)
+}
+
+export async function deleteBlogPost(id: string) {
+  await requireAdmin()
+  await prisma.blogPost.delete({ where: { id } })
+  revalidatePath("/admin/blog")
+  revalidatePath("/blog")
+}
+
+// ── SEO Meta ──
+
+export async function getSeoMeta(page: string) {
+  return prisma.seoMeta.findUnique({ where: { page } })
+}
+
+export async function getAllSeoMeta() {
+  await requireAdmin()
+  return prisma.seoMeta.findMany({ orderBy: { page: "asc" } })
+}
+
+export async function upsertSeoMeta(data: {
+  page: string
+  title?: string
+  description?: string
+  keywords?: string
+  ogImage?: string
+  schemaJson?: string
+}) {
+  await requireAdmin()
+  await prisma.seoMeta.upsert({
+    where: { page: data.page },
+    update: data,
+    create: data,
+  })
+  revalidatePath("/admin/seo")
+}

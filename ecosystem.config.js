@@ -11,6 +11,7 @@ module.exports = {
       env_production: {
         NODE_ENV: "production",
         PORT: 3005,
+        UPLOAD_DIR: "/var/www/prisan-beauty/uploads",
       },
       instances: 1,
       exec_mode: "fork",

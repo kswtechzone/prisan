@@ -24,7 +24,7 @@ export default async function ConfirmationPage({
     <div className="min-h-screen py-20 px-4">
       <div className="max-w-lg mx-auto text-center">
         <div className="flex justify-center mb-6">
-          <Image src="/pblogo.png" alt="PB Logo" width={64} height={64} className="rounded-2xl" />
+          <Image src="/prisanbeautylogo.png" alt="PB Logo" width={64} height={64} className="rounded-2xl" unoptimized />
         </div>
 
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">

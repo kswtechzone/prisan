@@ -37,7 +37,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <Image src="/pblogo.png" alt="PB Logo" width={56} height={56} className="rounded-2xl" />
+            <Image src="/prisanbeautylogo.png" alt="PB Logo" width={56} height={56} className="rounded-2xl" unoptimized />
           </div>
           <h1 className="text-2xl font-display font-bold text-luxury-charcoal">
             Admin Login

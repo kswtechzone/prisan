@@ -54,7 +54,7 @@ export default function HomePage() {
 
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
           <div className="flex justify-center mb-6 animate-fade-in">
-            <Image src="/pblogo.png" alt="PB Logo" width={72} height={72} className="rounded-2xl shadow-lg" />
+            <Image src="/prisanbeautylogo.png" alt="PB Logo" width={72} height={72} className="rounded-2xl shadow-lg" unoptimized />
           </div>
           <h1 className="text-5xl md:text-7xl font-display font-bold text-luxury-charcoal mb-6 animate-slide-up">
             Where Elegance

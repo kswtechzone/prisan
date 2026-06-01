@@ -22,14 +22,6 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer()
     const raw = Buffer.from(bytes)
 
-    const extMap: Record<string, string> = {
-      "image/jpeg": ".jpg",
-      "image/png": ".png",
-      "image/webp": ".webp",
-      "image/avif": ".avif",
-    }
-    const ext = extMap[file.type] || ".jpg"
-
     const image = sharp(raw)
     const metadata = await image.metadata()
     let output: Buffer
@@ -41,7 +33,8 @@ export async function POST(request: Request) {
     }
 
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "services")
+    const baseDir = process.env.UPLOAD_DIR || path.join(process.cwd(), "public")
+    const uploadDir = path.join(baseDir, "uploads", "services")
     const filepath = path.join(uploadDir, filename)
 
     await mkdir(uploadDir, { recursive: true })

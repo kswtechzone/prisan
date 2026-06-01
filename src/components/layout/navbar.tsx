@@ -11,6 +11,8 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
   { href: "/gallery", label: "Gallery" },
+  { href: "/blog", label: "Blog" },
+  { href: "/faq", label: "FAQ" },
   { href: "/booking", label: "Book Now" },
 ]
 
@@ -22,7 +24,7 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-3">
-            <Image src="/pblogo.png" alt="PB Logo" width={36} height={36} className="rounded-lg" />
+            <Image src="/prisanbeautylogo.png" alt="PB Logo" width={36} height={36} className="rounded-lg" unoptimized />
             <span className="text-xl font-display font-semibold text-luxury-charcoal">
               Prisan Beauty
             </span>
