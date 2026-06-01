@@ -81,7 +81,7 @@ export function GalleryForm({ image }: { image?: GalleryImage }) {
           <input type="hidden" name="url" value={imageUrl} />
           {imageUrl ? (
             <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-200">
-              <Image src={imageUrl} alt="Preview" fill className="object-cover" />
+               <Image src={imageUrl} alt="Preview" fill unoptimized className="object-cover" />
               <button
                 type="button"
                 onClick={() => setImageUrl("")}

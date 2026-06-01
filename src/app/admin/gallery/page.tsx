@@ -28,6 +28,7 @@ export default async function AdminGalleryPage() {
                 width={600}
                 height={400}
                 className="w-full h-auto object-cover"
+                unoptimized
               />
               <div className="absolute top-2 right-2">
                 <DeleteGalleryButton id={img.id} />

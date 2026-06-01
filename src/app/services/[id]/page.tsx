@@ -37,6 +37,7 @@ export default async function ServiceDetailPage({
                   src={service.image}
                   alt={service.name}
                   fill
+                  unoptimized
                   className="object-cover"
                 />
               </div>

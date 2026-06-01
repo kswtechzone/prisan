@@ -72,6 +72,7 @@ export function GalleryContent({
                   width={600}
                   height={400}
                   className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
+                  unoptimized
                 />
                 {img.caption && (
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
@@ -108,6 +109,7 @@ export function GalleryContent({
               width={1200}
               height={800}
               className="w-full h-auto rounded-2xl"
+              unoptimized
             />
             {selected.caption && (
               <p className="text-white text-center mt-4 text-lg font-medium">

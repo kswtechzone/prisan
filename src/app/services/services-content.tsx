@@ -75,6 +75,7 @@ export function ServicesContent({
                       src={service.image}
                       alt={service.name}
                       fill
+                      unoptimized
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>

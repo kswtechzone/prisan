@@ -31,6 +31,7 @@ export default async function AdminServicesPage() {
                     src={svc.image}
                     alt={svc.name}
                     fill
+                    unoptimized
                     className="object-cover"
                   />
                 </div>

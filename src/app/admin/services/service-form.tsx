@@ -157,6 +157,7 @@ export function ServiceForm({ service }: { service?: Service }) {
                   src={imageUrl}
                   alt="Service image"
                   fill
+                  unoptimized
                   className="object-cover"
                 />
                 <button
