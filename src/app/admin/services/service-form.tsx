@@ -35,6 +35,7 @@ export function ServiceForm({ service }: { service?: Service }) {
 
     setUploading(true)
     const fd = new FormData()
+    fd.append("dir", "services")
     fd.append("file", file)
 
     try {

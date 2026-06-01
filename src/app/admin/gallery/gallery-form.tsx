@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, Upload, X, ImageIcon } from "lucide-react"
+import { Plus, Upload, X, ImageIcon, CheckCircle2, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,62 +26,68 @@ export function GalleryForm({ image }: { image?: GalleryImage }) {
   const [uploading, setUploading] = useState(false)
   const [category, setCategory] = useState(image?.category || "hair")
   const [caption, setCaption] = useState(image?.caption || "")
-  const [files, setFiles] = useState<File[]>([])
-  const [previews, setPreviews] = useState<string[]>([])
-  const [uploadedUrls, setUploadedUrls] = useState<string[]>([])
+  const [pending, setPending] = useState<{ file: File; preview: string; url?: string }[]>([])
   const fileRef = useRef<HTMLInputElement>(null)
+  const previewUrlsRef = useRef<string[]>([])
 
   const reset = () => {
-    setFiles([])
-    setPreviews([])
-    setUploadedUrls([])
+    previewUrlsRef.current.forEach((u) => URL.revokeObjectURL(u))
+    previewUrlsRef.current = []
+    setPending([])
     setCategory("hair")
     setCaption("")
   }
 
+  useEffect(() => {
+    return () => previewUrlsRef.current.forEach((u) => URL.revokeObjectURL(u))
+  }, [])
+
+  const allUploaded = pending.length > 0 && pending.every((p) => p.url)
+
   const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || [])
     if (selected.length === 0) return
-    setFiles((prev) => [...prev, ...selected])
-    selected.forEach((f) => {
-      const url = URL.createObjectURL(f)
-      setPreviews((prev) => [...prev, url])
+    const newItems = selected.map((file) => {
+      const preview = URL.createObjectURL(file)
+      previewUrlsRef.current.push(preview)
+      return { file, preview }
     })
+    setPending((prev) => [...prev, ...newItems])
     if (e.target) e.target.value = ""
+
+    newItems.forEach((item) => {
+      const fd = new FormData()
+      fd.append("dir", "gallery")
+      fd.append("file", item.file)
+      fetch("/api/upload", { method: "POST", body: fd })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.urls?.[0]) {
+            setPending((prev) =>
+              prev.map((p) => (p.preview === item.preview ? { ...p, url: data.urls[0] } : p))
+            )
+          }
+        })
+        .catch(() => {})
+    })
   }
 
-  const removeFile = (idx: number) => {
-    URL.revokeObjectURL(previews[idx])
-    setFiles((prev) => prev.filter((_, i) => i !== idx))
-    setPreviews((prev) => prev.filter((_, i) => i !== idx))
-    setUploadedUrls((prev) => prev.filter((_, i) => i !== idx))
+  const removeItem = (idx: number) => {
+    URL.revokeObjectURL(pending[idx].preview)
+    previewUrlsRef.current.splice(idx, 1)
+    setPending((prev) => prev.filter((_, i) => i !== idx))
   }
-
-  const handleUpload = useCallback(async () => {
-    if (files.length === 0) return
-    setUploading(true)
-    const fd = new FormData()
-    fd.append("dir", "gallery")
-    files.forEach((f) => fd.append("file", f))
-    try {
-      const res = await fetch("/api/upload", { method: "POST", body: fd })
-      const data = await res.json()
-      if (data.urls) setUploadedUrls(data.urls)
-    } catch {
-      alert("Upload failed")
-    } finally {
-      setUploading(false)
-    }
-  }, [files])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!allUploaded) return
     setLoading(true)
-    const urls = uploadedUrls.length > 0 ? uploadedUrls : previews
     try {
-      if (urls.length > 0) {
-        await createGalleryImagesBatch({ urls, caption: caption || undefined, category })
-      }
+      await createGalleryImagesBatch({
+        urls: pending.map((p) => p.url!),
+        caption: caption || undefined,
+        category,
+      })
       setOpen(false)
       reset()
       router.refresh()
@@ -101,23 +107,31 @@ export function GalleryForm({ image }: { image?: GalleryImage }) {
 
       <Modal open={open} onClose={() => setOpen(false)} title="Add Gallery Images" className="max-w-2xl">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {previews.length > 0 ? (
+          {pending.length > 0 ? (
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {previews.map((url, i) => (
+              {pending.map((item, i) => (
                 <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
-                  <Image src={url} alt="" fill unoptimized className="object-cover" />
+                  <Image src={item.preview} alt="" fill unoptimized className="object-cover" />
                   <button
                     type="button"
-                    onClick={() => removeFile(i)}
+                    onClick={() => removeItem(i)}
                     className="absolute top-1 right-1 p-0.5 bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <X className="w-3 h-3 text-white" />
                   </button>
-                  {uploadedUrls[i] && (
-                    <div className="absolute bottom-0 inset-x-0 bg-green-500 text-white text-[10px] text-center py-0.5 font-medium">
-                      Uploaded
-                    </div>
-                  )}
+                  <div className="absolute bottom-0 inset-x-0 flex items-center justify-center py-1">
+                    {item.url ? (
+                      <span className="flex items-center gap-1 text-[10px] font-medium text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Uploaded
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[10px] font-medium text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Uploading
+                      </span>
+                    )}
+                  </div>
                 </div>
               ))}
               <button
@@ -148,13 +162,6 @@ export function GalleryForm({ image }: { image?: GalleryImage }) {
             className="hidden"
           />
 
-          {files.length > 0 && uploadedUrls.length !== files.length && (
-            <Button type="button" variant="outline" onClick={handleUpload} disabled={uploading} className="w-full">
-              <Upload className="w-4 h-4 mr-2" />
-              {uploading ? `Uploading ${files.length - uploadedUrls.length} left...` : `Upload ${files.length} images`}
-            </Button>
-          )}
-
           <Input
             id="caption"
             label="Caption (shared for all)"
@@ -175,8 +182,12 @@ export function GalleryForm({ image }: { image?: GalleryImage }) {
 
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="ghost" onClick={() => { reset(); setOpen(false) }}>Cancel</Button>
-            <Button type="submit" disabled={loading || files.length === 0}>
-              {loading ? "Saving..." : `Add ${files.length} image${files.length !== 1 ? "s" : ""}`}
+            <Button type="submit" disabled={loading || !allUploaded}>
+              {loading
+                ? "Saving..."
+                : !allUploaded && pending.length > 0
+                  ? "Uploading..."
+                  : `Add ${pending.length} image${pending.length !== 1 ? "s" : ""}`}
             </Button>
           </div>
         </form>
