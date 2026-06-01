@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Service {
+  id           String        @id @default(cuid())
+  name         String
+  description  String
+  price        Float
+  duration     Int
+  image        String?
+  category     String
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  bookingItems BookingItem[]
+
+  @@map("services")
+}
+
+model Stylist {
+  id        String    @id @default(cuid())
+  name      String
+  bio       String
+  image     String?
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  bookings  Booking[]
+
+  @@map("stylists")
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  customerName  String        @map("customer_name")
+  customerEmail String        @map("customer_email")
+  customerPhone String        @map("customer_phone")
+  stylistId     String        @map("stylist_id")
+  date          DateTime
+  time          String
+  status        String        @default("pending")
+  notes         String?
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  stylist       Stylist       @relation(fields: [stylistId], references: [id])
+  bookingItems  BookingItem[]
+
+  @@map("bookings")
+}
+
+model BookingItem {
+  id        String   @id @default(cuid())
+  bookingId String   @map("booking_id")
+  serviceId String   @map("service_id")
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  service   Service  @relation(fields: [serviceId], references: [id])
+
+  @@map("booking_items")
+}
+
+model GalleryImage {
+  id        String   @id @default(cuid())
+  url       String
+  caption   String?
+  category  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("gallery_images")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("admin")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
