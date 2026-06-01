@@ -82,9 +82,6 @@ export default function AdminLoginPage() {
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
-          Default: admin@prisanbeauty.com / admin123
-        </p>
       </div>
     </div>
   )
