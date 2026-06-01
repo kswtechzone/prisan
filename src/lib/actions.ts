@@ -293,6 +293,24 @@ export async function deleteGalleryImage(id: string) {
   revalidatePath("/gallery")
 }
 
+// ── Contact ──
+
+export async function submitContactForm(data: {
+  name: string
+  phone: string
+  email: string
+  message: string
+}) {
+  const { sendContactNotification } = await import("./mail")
+  try {
+    await sendContactNotification(data)
+    return { success: true }
+  } catch (e) {
+    console.error("Failed to send contact notification:", e)
+    return { success: false, error: "Failed to send message. Please try again." }
+  }
+}
+
 // ── FAQ ──
 
 export async function getFaqs() {

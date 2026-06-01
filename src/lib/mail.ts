@@ -97,6 +97,45 @@ export async function sendAdminNotification(booking: {
   })
 }
 
+export async function sendContactNotification(data: {
+  name: string
+  phone: string
+  email: string
+  message: string
+}) {
+  const { name, phone, email, message } = data
+
+  await transporter.sendMail({
+    from: FROM,
+    to: ADMIN_EMAIL,
+    subject: `Contact Form – ${name}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:560px;margin:0 auto;">
+        <div style="background:#2d2a24;padding:24px;text-align:center;border-radius:12px 12px 0 0;">
+          <h1 style="color:#e8437e;margin:0;font-size:20px;">New Contact Message</h1>
+        </div>
+        <div style="background:#faf7f2;padding:32px;border-radius:0 0 12px 12px;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="padding:8px 0;color:#888;">Name</td><td style="padding:8px 0;font-weight:600;">${name}</td></tr>
+            <tr><td style="padding:8px 0;color:#888;">Phone</td><td style="padding:8px 0;font-weight:600;">${phone}</td></tr>
+            <tr><td style="padding:8px 0;color:#888;">Email</td><td style="padding:8px 0;font-weight:600;">${email}</td></tr>
+          </table>
+          <div style="margin-top:16px;padding:16px;background:#fff;border-radius:8px;border:1px solid #e5e5e5;">
+            <p style="margin:0 0 8px;font-weight:600;color:#333;">Message:</p>
+            <p style="margin:0;color:#555;white-space:pre-wrap;">${message}</p>
+          </div>
+          <p style="margin-top:20px;">
+            <a href="mailto:${email}"
+               style="display:inline-block;background:#e8437e;color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:14px;">
+              Reply to ${name}
+            </a>
+          </p>
+        </div>
+      </div>
+    `.trim(),
+  })
+}
+
 export async function sendStatusUpdate(booking: {
   customerName: string
   customerEmail: string
