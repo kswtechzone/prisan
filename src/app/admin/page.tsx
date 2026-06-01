@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getDashboardStats } from "@/lib/actions"
 import { formatDateShort, getStatusColor } from "@/lib/utils"
+import { WalkinBooking } from "./walkin-booking"
 
 export default async function AdminDashboard() {
   const stats = await getDashboardStats()
@@ -56,9 +57,12 @@ export default async function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-display font-bold text-luxury-charcoal mb-8">
-        Dashboard
-      </h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-display font-bold text-luxury-charcoal">
+          Dashboard
+        </h1>
+        <WalkinBooking />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
         {cards.map((card) => {

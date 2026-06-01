@@ -1,5 +1,7 @@
 export const dynamic = "force-dynamic"
 
+import Link from "next/link"
+import { ExternalLink } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { getBookings } from "@/lib/actions"
@@ -76,6 +78,9 @@ export default async function AdminBookingsPage({
                   <th className="text-left py-3 px-4 font-medium text-gray-500">
                     Actions
                   </th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500">
+                    View
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -105,11 +110,20 @@ export default async function AdminBookingsPage({
                     <td className="py-3 px-4">
                       <BookingActions id={b.id} status={b.status} />
                     </td>
+                    <td className="py-3 px-4 text-right">
+                      <Link
+                        href={`/admin/bookings/${b.id}`}
+                        className="inline-flex items-center gap-1 text-sm text-luxury-gold hover:text-luxury-gold/80 font-medium transition-colors"
+                      >
+                        Details
+                        <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </td>
                   </tr>
                 ))}
                 {bookings.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-16 text-center text-gray-400">
+                    <td colSpan={7} className="py-16 text-center text-gray-400">
                       <div className="text-lg mb-1">No bookings found</div>
                       <div className="text-sm">
                         {status && status !== "all"

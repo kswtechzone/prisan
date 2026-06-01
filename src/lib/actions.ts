@@ -269,6 +269,23 @@ export async function createGalleryImage(data: {
   revalidatePath("/gallery")
 }
 
+export async function createGalleryImagesBatch(data: {
+  urls: string[]
+  caption?: string
+  category: string
+}) {
+  await requireAdmin()
+  await prisma.galleryImage.createMany({
+    data: data.urls.map((url) => ({
+      url,
+      caption: data.caption || null,
+      category: data.category,
+    })),
+  })
+  revalidatePath("/admin/gallery")
+  revalidatePath("/gallery")
+}
+
 export async function deleteGalleryImage(id: string) {
   await requireAdmin()
   await prisma.galleryImage.delete({ where: { id } })

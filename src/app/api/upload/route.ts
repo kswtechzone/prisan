@@ -7,40 +7,63 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"]
 const MAX_WIDTH = 1200
 const JPEG_QUALITY = 70
 
+function saveFile(raw: Buffer, subDir: string) {
+  return new Promise<{ url: string; filename: string }>(async (resolve, reject) => {
+    try {
+      const image = sharp(raw)
+      const metadata = await image.metadata()
+      let output: Buffer
+
+      if (metadata.width && metadata.width > MAX_WIDTH) {
+        output = await image.resize({ width: MAX_WIDTH, withoutEnlargement: true }).jpeg({ quality: JPEG_QUALITY }).toBuffer()
+      } else {
+        output = await image.jpeg({ quality: JPEG_QUALITY }).toBuffer()
+      }
+
+      const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`
+      const baseDir = process.env.UPLOAD_DIR || path.join(process.cwd(), "public")
+      const uploadDir = path.join(baseDir, "uploads", subDir)
+      const filepath = path.join(uploadDir, filename)
+
+      await mkdir(uploadDir, { recursive: true })
+      await writeFile(filepath, output)
+
+      resolve({ url: `/uploads/${subDir}/${filename}`, filename })
+    } catch (e) {
+      reject(e)
+    }
+  })
+}
+
 export async function POST(request: Request) {
   try {
     const formData = await request.formData()
-    const file = formData.get("file") as File | null
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 })
+    const subDir = (formData.get("dir") as string) || "services"
+
+    const files: File[] = []
+    for (const [key, value] of formData.entries()) {
+      if (key === "file" && value instanceof File) files.push(value)
     }
 
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "Invalid file type" }, { status: 400 })
+    if (files.length === 0) {
+      return NextResponse.json({ error: "No files provided" }, { status: 400 })
     }
 
-    const bytes = await file.arrayBuffer()
-    const raw = Buffer.from(bytes)
-
-    const image = sharp(raw)
-    const metadata = await image.metadata()
-    let output: Buffer
-
-    if (metadata.width && metadata.width > MAX_WIDTH) {
-      output = await image.resize({ width: MAX_WIDTH, withoutEnlargement: true }).jpeg({ quality: JPEG_QUALITY }).toBuffer()
-    } else {
-      output = await image.jpeg({ quality: JPEG_QUALITY }).toBuffer()
+    for (const file of files) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        return NextResponse.json({ error: `Invalid file type: ${file.type}` }, { status: 400 })
+      }
     }
 
-    const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`
-    const baseDir = process.env.UPLOAD_DIR || path.join(process.cwd(), "public")
-    const uploadDir = path.join(baseDir, "uploads", "services")
-    const filepath = path.join(uploadDir, filename)
+    const results = await Promise.all(
+      files.map(async (file) => {
+        const bytes = await file.arrayBuffer()
+        const raw = Buffer.from(bytes)
+        return saveFile(raw, subDir)
+      })
+    )
 
-    await mkdir(uploadDir, { recursive: true })
-    await writeFile(filepath, output)
-
-    return NextResponse.json({ url: `/uploads/services/${filename}` })
+    return NextResponse.json({ urls: results.map((r) => r.url) })
   } catch {
     return NextResponse.json({ error: "Upload failed" }, { status: 500 })
   }

@@ -40,7 +40,8 @@ export function ServiceForm({ service }: { service?: Service }) {
     try {
       const res = await fetch("/api/upload", { method: "POST", body: fd })
       const data = await res.json()
-      if (data.url) setImageUrl(data.url)
+      const url = data.url || data.urls?.[0]
+      if (url) setImageUrl(url)
     } catch {
       alert("Image upload failed")
     } finally {

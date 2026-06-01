@@ -1,8 +1,6 @@
 import type { Metadata } from "next"
 import { Inter, Playfair_Display } from "next/font/google"
 import "./globals.css"
-import { Navbar } from "@/components/layout/navbar"
-import { Footer } from "@/components/layout/footer"
 import { SeoMetaInjector } from "@/components/seo-meta-injector"
 
 const inter = Inter({
@@ -39,9 +37,7 @@ export default function RootLayout({
         <SeoMetaInjector />
       </head>
       <body className="min-h-screen bg-luxury-cream text-luxury-charcoal">
-        <Navbar />
-        <main className="pt-16">{children}</main>
-        <Footer />
+        {children}
       </body>
     </html>
   )
