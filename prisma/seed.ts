@@ -10,8 +10,8 @@ async function main() {
     update: {},
     create: {
       email: "admin@prisanbeauty.com",
+      fullName: "Admin",
       password: adminPassword,
-      name: "Admin",
       role: "admin",
     },
   })
@@ -102,34 +102,34 @@ async function main() {
     {
       title: "Essential Hair Care Tips for Kathmandu Weather",
       slug: "hair-care-tips-kathmandu",
-      content: `## Understand Your Hair Type\n\nKathmandu's unique climate — dry winters and humid monsoons — can take a toll on your hair. Understanding your hair type is the first step to proper care.\n\n## Hydration is Key\n\nDuring the dry months, use a moisturizing shampoo and conditioner. Look for products with natural ingredients like aloe vera and coconut oil.\n\n## Protect from Pollution\n\nThe city's dust and pollution can make hair dull. Cover your hair when outdoors and wash it regularly with a gentle cleanser.\n\n## Regular Trims\n\nVisit your stylist every 6-8 weeks to prevent split ends and maintain healthy growth. At Prisan Beauty, our stylists can recommend the perfect cut for your face shape and lifestyle.`,
+      content: "## Understand Your Hair Type\n\nKathmandu's unique climate can take a toll on your hair. Understanding your hair type is the first step to proper care.\n\n## Hydration is Key\n\nDuring the dry months, use a moisturizing shampoo and conditioner.\n\n## Regular Trims\n\nVisit your stylist every 6-8 weeks to prevent split ends and maintain healthy growth.",
       excerpt: "Learn how to protect and nourish your hair in Kathmandu's unique climate conditions.",
       author: "Sophia Chen",
       published: true,
       metaTitle: "Hair Care Tips for Kathmandu — Prisan Beauty",
-      metaDescription: "Expert hair care advice for Kathmandu's climate. Learn how to keep your hair healthy through dry winters and humid monsoons.",
+      metaDescription: "Expert hair care advice for Kathmandu's climate.",
       metaKeywords: "hair care, Kathmandu, hair tips, Nepal, Prisan Beauty",
     },
     {
       title: "5 Skincare Trends to Try This Season",
       slug: "skincare-trends-season",
-      content: `## Glass Skin\n\nAchieving that dewy, translucent look starts with proper hydration. Layer a hydrating toner, serum, and moisturizer for maximum glow.\n\n## Sustainable Beauty\n\nMore people are choosing eco-friendly, cruelty-free products. We support this shift and recommend brands that prioritize sustainability.\n\n## Facial Massage\n\nRegular facial massage improves circulation and gives your skin a natural lift. Book a facial at Prisan Beauty to experience the benefits.\n\n## Sun Protection\n\nNever skip sunscreen — even on cloudy days in Kathmandu. SPF 50 is your best defense against premature aging.\n\n## Customized Routines\n\nEveryone's skin is different. Visit our skincare specialists for a personalized consultation and product recommendations.`,
+      content: "## Glass Skin\n\nAchieving that dewy look starts with proper hydration.\n\n## Sun Protection\n\nNever skip sunscreen — even on cloudy days in Kathmandu.\n\n## Customized Routines\n\nEveryone's skin is different. Visit our skincare specialists for a personalized consultation.",
       excerpt: "Discover the latest skincare trends from glass skin to sustainable beauty routines.",
       author: "Olivia Williams",
       published: true,
       metaTitle: "5 Skincare Trends to Try — Prisan Beauty Blog",
-      metaDescription: "Discover the hottest skincare trends this season. From glass skin to facial massage, find your next glow-up at Prisan Beauty.",
+      metaDescription: "Discover the hottest skincare trends this season.",
       metaKeywords: "skincare trends, beauty, facial, Kathmandu, Prisan Beauty",
     },
     {
       title: "The Ultimate Guide to Bridal Makeup in Kathmandu",
       slug: "bridal-makeup-guide",
-      content: `## Start Early\n\nBegin your skincare routine at least 3 months before your wedding. Healthy skin is the best canvas for makeup.\n\n## Trial Session\n\nAlways schedule a trial session with your makeup artist. This ensures you love the look and it lasts through the event.\n\n## Choose Long-Lasting Products\n\nYour wedding day is long. We use professional-grade, waterproof products that stay flawless from ceremony to reception.\n\n## Trust Your Stylist\n\nAt Prisan Beauty, our bridal team has decades of combined experience. We know what works best for different skin tones, face shapes, and wedding themes.\n\n## Relax and Enjoy\n\nOn your big day, trust your team and enjoy every moment. We handle the beauty — you make the memories.`,
+      content: "## Start Early\n\nBegin your skincare routine at least 3 months before your wedding.\n\n## Trial Session\n\nAlways schedule a trial session with your makeup artist.\n\n## Trust Your Stylist\n\nAt Prisan Beauty, our bridal team has decades of combined experience.",
       excerpt: "Everything you need to know about bridal beauty from trial sessions to the big day.",
       author: "Mia Johnson",
       published: true,
       metaTitle: "Bridal Makeup Guide Kathmandu — Prisan Beauty",
-      metaDescription: "Complete guide to bridal makeup in Kathmandu. Tips on trials, products, and choosing the right artist for your wedding day.",
+      metaDescription: "Complete guide to bridal makeup in Kathmandu.",
       metaKeywords: "bridal makeup, wedding, Kathmandu, Prisan Beauty, bridal beauty",
     },
   ]
@@ -139,7 +139,22 @@ async function main() {
     await prisma.blogPost.createMany({ data: blogPosts })
   }
 
-  console.log("Seeded admin user, stylists, FAQs, SEO meta, and blog posts")
+  const spinOffers = [
+    { title: "Better Luck Next Time", description: "Try again next time!", probability: 50, rewardType: "none", color: "#E5E7EB", isActive: true, discountPercent: 0 },
+    { title: "5% Off Nail Art", description: "5% discount on any nail art service", probability: 20, rewardType: "discount", couponCode: "NAIL5", color: "#F9A8D4", isActive: true, discountPercent: 5 },
+    { title: "10% Makeup Discount", description: "10% off on any makeup service", probability: 12, rewardType: "discount", couponCode: "MAKEUP10", color: "#F472B6", isActive: true, discountPercent: 10 },
+    { title: "15% Hair Styling", description: "15% off on hair styling services", probability: 8, rewardType: "discount", couponCode: "HAIR15", color: "#A78BFA", isActive: true, discountPercent: 15 },
+    { title: "Free Nail Service", description: "Complimentary basic nail art service", probability: 5, rewardType: "free_service", couponCode: "FREENAIL", color: "#34D399", isActive: true, discountPercent: 100 },
+    { title: "Free Hair Spa", description: "Complimentary hair spa treatment", probability: 3, rewardType: "free_service", couponCode: "FREESPA", color: "#60A5FA", isActive: true, discountPercent: 100 },
+    { title: "Bridal Package Coupon", description: "20% off on any bridal package", probability: 2, rewardType: "coupon", couponCode: "BRIDAL20", color: "#FBBF24", isActive: true, discountPercent: 20 },
+  ]
+
+  const existingOffers = await prisma.spinOffer.count()
+  if (existingOffers === 0) {
+    await prisma.spinOffer.createMany({ data: spinOffers })
+  }
+
+  console.log("Seeded admin user, stylists, FAQs, SEO meta, blog posts, and spin offers")
 }
 
 main()

@@ -19,7 +19,7 @@ export default async function BookingDetailPage({
   const booking = await getBooking(id)
   if (!booking) notFound()
 
-  const total = booking.bookingItems.reduce((s, i) => s + i.service.price, 0)
+  const total = booking.bookingItems.reduce((s, i) => s + i.servicePrice, 0)
 
   return (
     <div>
@@ -52,24 +52,53 @@ export default async function BookingDetailPage({
                 Services
               </h2>
               <div className="space-y-3">
-                {booking.bookingItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
-                  >
-                    <div>
-                      <p className="font-medium">{item.service.name}</p>
-                      <p className="text-xs text-gray-400">{item.service.duration} min</p>
+                {booking.bookingItems.map((item) => {
+                  const dPrice = item.discountedPrice ?? item.servicePrice
+                  const hasDiscount = dPrice < item.servicePrice
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                    >
+                      <div>
+                        <p className="font-medium">{item.serviceName}</p>
+                        <p className="text-xs text-gray-400">{item.service?.category || ""}</p>
+                      </div>
+                      <span className={`font-semibold ${hasDiscount ? "text-green-600" : "text-luxury-gold"}`}>
+                        {formatPrice(dPrice)}
+                        {hasDiscount && (
+                          <span className="line-through text-gray-400 ml-1.5 text-xs font-normal">
+                            {formatPrice(item.servicePrice)}
+                          </span>
+                        )}
+                      </span>
                     </div>
-                    <span className="font-semibold text-luxury-gold">
-                      {formatPrice(item.service.price)}
-                    </span>
+                  )
+                })}
+                {booking.discountAmount && booking.discountAmount > 0 ? (
+                  <>
+                    <div className="flex items-center justify-between text-sm text-green-600 pt-2">
+                      <span>Discount{booking.couponCode ? ` (${booking.couponCode})` : ""}</span>
+                      <span>-{formatPrice(booking.discountAmount)}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                      <span className="font-semibold text-base">Final Total</span>
+                      <span className="font-bold text-lg text-luxury-gold">
+                        {formatPrice(booking.finalAmount ?? (total - booking.discountAmount))}
+                      </span>
+                    </div>
+                    {booking.coupon && (
+                      <div className="text-xs text-gray-400 pt-1">
+                        Coupon: <span className="font-mono">{booking.coupon.code}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                    <span className="font-semibold text-base">Total</span>
+                    <span className="font-bold text-lg text-luxury-gold">{formatPrice(total)}</span>
                   </div>
-                ))}
-                <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                  <span className="font-semibold text-base">Total</span>
-                  <span className="font-bold text-lg text-luxury-gold">{formatPrice(total)}</span>
-                </div>
+                )}
               </div>
             </CardContent>
           </Card>

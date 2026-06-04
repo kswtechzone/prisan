@@ -1,0 +1,9 @@
+{
+  "version": "5.2.0",
+  "steps": [
+    {
+      "tag": "CreateMigration",
+      "migration_name": "20260604000000_add_spin_system"
+    }
+  ]
+}

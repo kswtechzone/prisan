@@ -38,6 +38,12 @@ export function Footer() {
               <Link href="/gallery" className="block text-sm text-gray-400 hover:text-luxury-gold transition-colors">
                 Gallery
               </Link>
+              <Link href="/spin" className="block text-sm text-gray-400 hover:text-luxury-gold transition-colors">
+                Spin & Win
+              </Link>
+              <Link href="/rewards" className="block text-sm text-gray-400 hover:text-luxury-gold transition-colors">
+                Rewards
+              </Link>
               <Link href="/blog" className="block text-sm text-gray-400 hover:text-luxury-gold transition-colors">
                 Blog
               </Link>
@@ -91,6 +97,14 @@ export function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-gray-500">
+          <div className="flex gap-4">
+            <Link href="/privacy-policy" className="hover:text-luxury-gold transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/terms-conditions" className="hover:text-luxury-gold transition-colors">
+              Terms & Conditions
+            </Link>
+          </div>
           <span>&copy; {new Date().getFullYear()} Prisan Beauty. All rights reserved.</span>
           <span>
             Developed by{" "}

@@ -5,7 +5,7 @@ import { ExternalLink } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { getBookings } from "@/lib/actions"
-import { formatDateShort, getStatusColor } from "@/lib/utils"
+import { formatDateShort, formatPrice, getStatusColor } from "@/lib/utils"
 import { BookingActions } from "./booking-actions"
 import { BookingsFilter } from "./bookings-filter"
 
@@ -28,7 +28,7 @@ export default async function AdminBookingsPage({
         b.customerName.toLowerCase().includes(query) ||
         b.customerEmail.toLowerCase().includes(query) ||
         b.stylist.name.toLowerCase().includes(query) ||
-        b.bookingItems.some((i) => i.service.name.toLowerCase().includes(query))
+        b.bookingItems.some((i) => i.serviceName.toLowerCase().includes(query))
     )
   }
 
@@ -70,6 +70,9 @@ export default async function AdminBookingsPage({
                     Stylist
                   </th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">
+                    Total
+                  </th>
+                  <th className="text-left py-3 px-4 font-medium text-gray-500">
                     Date & Time
                   </th>
                   <th className="text-left py-3 px-4 font-medium text-gray-500">
@@ -94,11 +97,26 @@ export default async function AdminBookingsPage({
                     <td className="py-3 px-4">
                       <div className="space-y-0.5">
                         {b.bookingItems.map((item) => (
-                          <div key={item.id} className="text-sm">{item.service.name}</div>
+                          <div key={item.id} className="text-sm">{item.serviceName}</div>
                         ))}
                       </div>
                     </td>
                     <td className="py-3 px-4">{b.stylist.name}</td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      {(() => {
+                        const t = b.bookingItems.reduce((s, i) => s + i.servicePrice, 0)
+                        return (
+                          <>
+                            {formatPrice(b.discountAmount ? t - b.discountAmount : t)}
+                            {b.couponCode && (
+                              <span className="ml-2 text-xs font-mono text-green-600 border border-green-200 bg-green-50 rounded px-1">
+                                {b.discountPercent}% off
+                              </span>
+                            )}
+                          </>
+                        )
+                      })()}
+                    </td>
                     <td className="py-3 px-4 whitespace-nowrap">
                       {formatDateShort(b.date)} at {b.time}
                     </td>

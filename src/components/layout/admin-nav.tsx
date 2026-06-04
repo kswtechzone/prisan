@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import Image from "next/image"
-import { LayoutDashboard, CalendarDays, Scissors, Users, Image as ImageIcon, HelpCircle, Search, FileText, LogOut } from "lucide-react"
+import { LayoutDashboard, CalendarDays, Scissors, Users, Image as ImageIcon, HelpCircle, Search, FileText, Gift, TrendingUp, LogOut, Ticket, Percent, Settings, PartyPopper } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { logoutAction } from "@/lib/actions"
 
@@ -15,7 +15,13 @@ const adminLinks = [
   { href: "/admin/gallery", label: "Gallery", icon: ImageIcon },
   { href: "/admin/blog", label: "Blog", icon: FileText },
   { href: "/admin/faqs", label: "FAQs", icon: HelpCircle },
+  { href: "/admin/offers", label: "Offers", icon: Gift },
+  { href: "/admin/coupons", label: "Coupons", icon: Ticket },
+  { href: "/admin/general-coupons", label: "General Coupons", icon: Percent },
+  { href: "/admin/analytics", label: "Analytics", icon: TrendingUp },
+  { href: "/admin/events", label: "Events", icon: PartyPopper },
   { href: "/admin/seo", label: "SEO", icon: Search },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ]
 
 export function AdminNav() {

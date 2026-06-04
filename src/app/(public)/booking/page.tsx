@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, Suspense } from "react"
+import { useState, useEffect, Suspense, useMemo, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Image from "next/image"
 import { format, addDays, startOfToday } from "date-fns"
@@ -9,10 +9,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { createBooking, getServices, getStylists } from "@/lib/actions"
+import { createBooking, getServices, getStylists, validateCoupon, getCurrentUserProfile } from "@/lib/actions"
 import { formatPrice, generateTimeSlots } from "@/lib/utils"
+import { calculateInvoice } from "@/lib/billing"
 import type { Service, Stylist } from "@prisma/client"
-import type { BookingFormData } from "@/types"
+import type { BookingFormData, CouponValidationResult, Invoice } from "@/types"
 
 type Step = "service" | "stylist" | "datetime" | "info" | "confirm"
 
@@ -30,6 +31,7 @@ function BookingForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselectedServiceId = searchParams.get("serviceId")
+  const couponParam = searchParams.get("coupon")
 
   const [currentStep, setCurrentStep] = useState<Step>("service")
   const [services, setServices] = useState<Service[]>([])
@@ -47,17 +49,49 @@ function BookingForm() {
     date: format(addDays(startOfToday(), 1), "yyyy-MM-dd"),
     time: "",
     notes: "",
+    couponCode: couponParam || "",
   })
+  const [couponStatus, setCouponStatus] = useState<CouponValidationResult | null>(null)
+  const [checkingCoupon, setCheckingCoupon] = useState(false)
+  const autoCouponApplied = useRef(false)
 
   useEffect(() => {
     async function load() {
-      const [svc, styl] = await Promise.all([getServices(), getStylists()])
+      const [svc, styl, profile] = await Promise.all([
+        getServices(),
+        getStylists(),
+        getCurrentUserProfile(),
+      ])
       setServices(svc)
       setStylists(styl)
+
+      if (profile) {
+        setFormData((prev) => ({
+          ...prev,
+          customerName: profile.fullName,
+          customerEmail: profile.email,
+          customerPhone: profile.mobile || "",
+        }))
+      }
+
       setLoading(false)
     }
     load()
   }, [])
+
+  useEffect(() => {
+    if (loading) return
+    if (couponParam && !autoCouponApplied.current) {
+      autoCouponApplied.current = true
+      setCheckingCoupon(true)
+      validateCoupon(couponParam, formData.serviceIds)
+        .then((result) => setCouponStatus(result))
+        .catch(() =>
+          setCouponStatus({ valid: false, message: "Failed to validate coupon" })
+        )
+        .finally(() => setCheckingCoupon(false))
+    }
+  }, [loading, couponParam])
 
   const filteredServices = activeCategory === "all"
     ? services
@@ -66,6 +100,30 @@ function BookingForm() {
   const selectedServices = services.filter((s) => formData.serviceIds.includes(s.id))
   const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0)
   const selectedStylist = stylists.find((s) => s.id === formData.stylistId)
+
+  // Live invoice via billing engine
+  const invoice: Invoice = useMemo(() => {
+    const servicesForBilling = selectedServices.map((s) => ({
+      id: s.id,
+      name: s.name,
+      price: s.price,
+      category: s.category,
+    }))
+    if (couponStatus?.valid) {
+      return calculateInvoice(servicesForBilling, {
+        id: couponStatus.couponId || "",
+        code: couponStatus.couponCode || "",
+        title: couponStatus.title || couponStatus.reward || "",
+        discountType: couponStatus.discountType || "percentage",
+        discountValue: couponStatus.discountValue ?? couponStatus.discountPercent ?? 0,
+        discountPercent: couponStatus.discountPercent ?? null,
+        category: couponStatus.category || null,
+        allowedServices: couponStatus.allowedServices || [],
+        minimumAmount: couponStatus.minimumAmount ?? 0,
+      })
+    }
+    return calculateInvoice(servicesForBilling, null)
+  }, [selectedServices, couponStatus])
 
   const toggleService = (id: string) => {
     setFormData((prev) => ({
@@ -106,10 +164,26 @@ function BookingForm() {
     try {
       const booking = await createBooking(formData)
       router.push(`/booking/confirmation/${booking.id}`)
-    } catch {
-      alert("Something went wrong. Please try again.")
+    } catch (e: any) {
+      alert(e.message || "Something went wrong. Please try again.")
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleApplyCoupon = async () => {
+    if (!formData.couponCode || checkingCoupon) return
+    setCheckingCoupon(true)
+    try {
+      const result = await validateCoupon(formData.couponCode, formData.serviceIds)
+      setCouponStatus(result)
+      if (!result.valid) {
+        setCouponStatus(result)
+      }
+    } catch {
+      setCouponStatus({ valid: false, message: "Failed to validate coupon" })
+    } finally {
+      setCheckingCoupon(false)
     }
   }
 
@@ -198,6 +272,8 @@ function BookingForm() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                   {filteredServices.map((svc) => {
                     const selected = formData.serviceIds.includes(svc.id)
+                    const couponCat = couponStatus?.valid ? couponStatus.category : null
+                    const isHighlighted = couponCat && svc.category === couponCat
                     return (
                       <button
                         key={svc.id}
@@ -206,7 +282,9 @@ function BookingForm() {
                         className={`relative p-4 rounded-xl border-2 text-left transition-all ${
                           selected
                             ? "border-luxury-gold bg-luxury-gold/5 ring-2 ring-luxury-gold/20"
-                            : "border-gray-200 hover:border-luxury-gold/40"
+                            : isHighlighted
+                              ? "border-green-300 bg-green-50/30"
+                              : "border-gray-200 hover:border-luxury-gold/40"
                         }`}
                       >
                         {svc.image && (
@@ -229,6 +307,11 @@ function BookingForm() {
                         {selected && (
                           <div className="absolute top-2 right-2 w-5 h-5 bg-luxury-gold rounded-full flex items-center justify-center">
                             <Check className="w-3 h-3 text-white" />
+                          </div>
+                        )}
+                        {isHighlighted && !selected && (
+                          <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-green-500 text-white text-[9px] rounded-full font-medium">
+                            Discount
                           </div>
                         )}
                       </button>
@@ -369,25 +452,107 @@ function BookingForm() {
                   Confirm Your Booking
                 </h2>
                 <div className="bg-luxury-cream rounded-xl p-6 space-y-4">
+                  {/* Invoice from billing engine */}
                   <div>
                     <span className="text-gray-500 text-sm block mb-2">Services</span>
                     <div className="space-y-2">
-                      {selectedServices.map((svc) => (
-                        <div key={svc.id} className="flex justify-between items-center">
-                          <span className="font-medium">{svc.name}</span>
-                          <span className="text-sm text-luxury-gold">
-                            {formatPrice(svc.price)}
+                      {invoice.lineItems.map((li) => (
+                        <div key={li.serviceId} className="flex justify-between items-center">
+                          <span className="font-medium">
+                            {li.serviceName}
+                            {li.isDiscounted && (
+                              <span className="ml-1.5 text-[10px] text-green-600 font-normal bg-green-100 px-1.5 py-0.5 rounded-full">
+                                discount
+                              </span>
+                            )}
+                          </span>
+                          <span className={`text-sm ${li.isDiscounted ? "text-green-600" : "text-luxury-gold"}`}>
+                            {formatPrice(li.discountedPrice)}
+                            {li.isDiscounted && (
+                              <span className="line-through text-gray-400 ml-1.5 text-xs">
+                                {formatPrice(li.originalPrice)}
+                              </span>
+                            )}
                           </span>
                         </div>
                       ))}
                     </div>
-                    <div className="border-t border-gray-300 mt-3 pt-3 flex justify-between items-center">
-                      <span className="font-semibold">Total</span>
+
+                    {/* Subtotal */}
+                    <div className="border-t border-gray-300 mt-3 pt-3 flex justify-between items-center text-sm text-gray-500">
+                      <span>Subtotal</span>
+                      <span>{formatPrice(invoice.subtotal)}</span>
+                    </div>
+
+                    {/* Discount line */}
+                    {invoice.totalDiscount > 0 && (
+                      <div className="flex justify-between items-center text-sm text-green-600">
+                        <span>
+                          Coupon Discount
+                          {invoice.couponTitle && (
+                            <span className="text-gray-400 ml-1">({invoice.couponTitle})</span>
+                          )}
+                        </span>
+                        <span>-{formatPrice(invoice.totalDiscount)}</span>
+                      </div>
+                    )}
+
+                    {/* Total */}
+                    <div className="border-t border-gray-300 pt-2 flex justify-between items-center">
+                      <span className="font-semibold text-base">Total</span>
                       <span className="font-semibold text-luxury-gold text-lg">
-                        {formatPrice(totalPrice)}
+                        {formatPrice(invoice.finalAmount)}
                       </span>
                     </div>
                   </div>
+
+                  {/* Coupon */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <span className="text-gray-500 text-sm block mb-2">
+                      Have a coupon?
+                    </span>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={formData.couponCode || ""}
+                        onChange={(e) => {
+                          setFormData({ ...formData, couponCode: e.target.value })
+                          setCouponStatus(null)
+                        }}
+                        placeholder="Enter coupon code"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-luxury-gold/50"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleApplyCoupon}
+                        disabled={!formData.couponCode || checkingCoupon}
+                      >
+                        {checkingCoupon ? "..." : "Apply"}
+                      </Button>
+                    </div>
+                    {couponStatus && (
+                      <div
+                        className={`mt-2 text-sm ${
+                          couponStatus.valid
+                            ? "text-green-600"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {couponStatus.valid
+                          ? `${couponStatus.reward} — ${couponStatus.discountValue}${couponStatus.discountType === "percentage" ? "% off" : " off"}${couponStatus.category ? ` on ${couponStatus.category}` : ""}`
+                          : couponStatus.message}
+                      </div>
+                    )}
+                    {/* Minimum amount warning */}
+                    {couponStatus?.valid && couponStatus.minimumAmount && invoice.subtotal < couponStatus.minimumAmount && (
+                      <div className="mt-1 text-xs text-amber-600">
+                        Minimum booking amount is Rs.{couponStatus.minimumAmount}. Current subtotal: Rs.{invoice.subtotal}
+                      </div>
+                    )}
+                  </div>
+
                   <div className="flex justify-between">
                     <span className="text-gray-500">Stylist</span>
                     <span className="font-medium">{selectedStylist?.name}</span>

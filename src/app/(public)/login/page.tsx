@@ -1,0 +1,105 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
+import { loginAction } from "@/lib/actions"
+
+export default function LoginPage() {
+  const router = useRouter()
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setLoading(true)
+    setError("")
+
+    const form = new FormData(e.currentTarget)
+    const result = await loginAction(
+      form.get("email") as string,
+      form.get("password") as string
+    )
+
+    if ("error" in result) {
+      setError((result as { error: string }).error)
+      setLoading(false)
+    } else {
+      router.push("/profile")
+    }
+  }
+
+  return (
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <Image
+              src="/prisanbeautylogo.png"
+              alt="PB Logo"
+              width={56}
+              height={56}
+              className="rounded-2xl"
+              unoptimized
+            />
+          </div>
+          <h1 className="text-2xl font-display font-bold text-luxury-charcoal">
+            Welcome Back
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Sign in to your Prisan Beauty account
+          </p>
+        </div>
+
+        <Card>
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                label="Email"
+                placeholder="your@email.com"
+                required
+                autoComplete="email"
+              />
+              <PasswordInput
+                id="password"
+                name="password"
+                label="Password"
+                placeholder="Enter your password"
+                required
+                autoComplete="current-password"
+              />
+
+              {error && (
+                <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                  {error}
+                </p>
+              )}
+
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center text-sm text-gray-500">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="/register"
+                className="text-luxury-gold hover:underline font-medium"
+              >
+                Register here
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}

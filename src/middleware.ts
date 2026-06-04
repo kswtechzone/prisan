@@ -1,22 +1,29 @@
-import { NextResponse } from "next/server"
-import type { NextRequest } from "next/server"
+import { auth } from "@/lib/auth"
 
-const adminOnlyPaths = ["/admin", "/admin/bookings", "/admin/services", "/admin/stylists"]
+export default auth((req) => {
+  const { pathname } = req.nextUrl
+  const isAdminRoute = pathname.startsWith("/admin")
+  const isAdminLogin = pathname === "/admin/login"
+  const isProfileRoute = pathname === "/profile"
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  if (!adminOnlyPaths.includes(pathname)) return NextResponse.next()
-
-  const session = request.cookies.get("session")?.value
-  if (!session) {
-    const loginUrl = new URL("/admin/login", request.url)
-    loginUrl.searchParams.set("redirect", pathname)
-    return NextResponse.redirect(loginUrl)
+  if (isAdminRoute && !isAdminLogin) {
+    if (!req.auth) {
+      const loginUrl = new URL("/admin/login", req.url)
+      loginUrl.searchParams.set("redirect", pathname)
+      return Response.redirect(loginUrl)
+    }
+    if (req.auth.user?.role !== "admin") {
+      return Response.redirect(new URL("/", req.url))
+    }
   }
 
-  return NextResponse.next()
-}
+  if (isProfileRoute) {
+    if (!req.auth) {
+      return Response.redirect(new URL("/login", req.url))
+    }
+  }
+})
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/profile"],
 }
