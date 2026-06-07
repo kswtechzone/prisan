@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { SpinWheelDemo } from "@/components/spin-wheel-demo"
 import { getActiveOffers, getServices } from "@/lib/actions"
 
 const features = [
@@ -245,48 +246,54 @@ export default async function HomePage() {
 
       {/* Spin & Win CTA */}
       <section className="py-20 px-4 bg-gradient-to-r from-luxury-gold/5 via-luxury-champagne to-luxury-gold/5">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-luxury-gold rounded-2xl flex items-center justify-center shadow-lg">
-              <Gift className="w-10 h-10 text-white" />
+        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-12">
+          <div className="flex-1 text-center lg:text-left">
+            <div className="flex justify-center lg:justify-start mb-6">
+              <div className="w-20 h-20 bg-luxury-gold rounded-2xl flex items-center justify-center shadow-lg">
+                <Gift className="w-10 h-10 text-white" />
+              </div>
             </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-luxury-charcoal mb-4">
+              Spin & Win
+              <br />
+              <span className="text-luxury-gold">Exclusive Rewards</span>
+            </h2>
+            <p className="text-gray-600 max-w-xl mx-auto lg:mx-0 mb-8">
+              Try your luck and win beauty discounts, free services, bridal
+              packages, and more! Every spin is a chance to save.
+            </p>
+
+            {offers.length > 0 && (
+              <div className="flex flex-wrap justify-center lg:justify-start gap-3 mb-8">
+                {offers
+                  .filter((o) => o.rewardType !== "none")
+                  .slice(0, 4)
+                  .map((offer) => (
+                    <span
+                      key={offer.id}
+                      className="inline-flex items-center gap-1.5 bg-white rounded-full px-4 py-2 text-sm shadow-sm"
+                    >
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: offer.color || "#8B5E3C" }}
+                      />
+                      {offer.title}
+                    </span>
+                  ))}
+              </div>
+            )}
+
+            <Link href="/spin">
+              <Button size="lg" className="text-lg">
+                <Sparkles className="w-5 h-5 mr-2" />
+                Spin the Wheel
+              </Button>
+            </Link>
           </div>
-          <h2 className="text-3xl md:text-5xl font-display font-bold text-luxury-charcoal mb-4">
-            Spin & Win
-            <br />
-            <span className="text-luxury-gold">Exclusive Rewards</span>
-          </h2>
-          <p className="text-gray-600 max-w-xl mx-auto mb-8">
-            Try your luck and win beauty discounts, free services, bridal
-            packages, and more! Every spin is a chance to save.
-          </p>
 
-          {offers.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-3 mb-8">
-              {offers
-                .filter((o) => o.rewardType !== "none")
-                .slice(0, 4)
-                .map((offer) => (
-                  <span
-                    key={offer.id}
-                    className="inline-flex items-center gap-1.5 bg-white rounded-full px-4 py-2 text-sm shadow-sm"
-                  >
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: offer.color || "#8B5E3C" }}
-                    />
-                    {offer.title}
-                  </span>
-                ))}
-            </div>
-          )}
-
-          <Link href="/spin">
-            <Button size="lg" className="text-lg">
-              <Sparkles className="w-5 h-5 mr-2" />
-              Spin the Wheel
-            </Button>
-          </Link>
+          <div className="flex-shrink-0">
+            <SpinWheelDemo offers={offers} />
+          </div>
         </div>
       </section>
 

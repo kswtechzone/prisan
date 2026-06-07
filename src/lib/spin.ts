@@ -2,8 +2,6 @@ import { prisma } from "./prisma"
 import { auth } from "./auth"
 import { randomBytes } from "crypto"
 
-const DAILY_SPIN_LIMIT = 10
-
 interface SpinResult {
   offerId: string | null
   reward: string
@@ -11,6 +9,24 @@ interface SpinResult {
   color: string
   needsConfirmation?: boolean
   spinHistoryId?: string
+  nextEligibleDate?: string
+}
+
+interface SpinConfig {
+  dailySpinLimit: number
+  weeklyClaimPeriodDays: number
+  antiSpamCooldownMs: number
+  stalePendingMinutes: number
+}
+
+async function getSpinConfig(): Promise<SpinConfig> {
+  const config = await prisma.spinConfig.findFirst()
+  return {
+    dailySpinLimit: config?.dailySpinLimit ?? 10,
+    weeklyClaimPeriodDays: config?.weeklyClaimPeriodDays ?? 7,
+    antiSpamCooldownMs: config?.antiSpamCooldownMs ?? 3000,
+    stalePendingMinutes: config?.stalePendingMinutes ?? 10,
+  }
 }
 
 function generateCouponSuffix(): string {
@@ -29,12 +45,17 @@ function todayDate(): Date {
   return d
 }
 
+function weeklyMs(days: number): number {
+  return days * 24 * 60 * 60 * 1000
+}
+
 export async function spin(): Promise<SpinResult> {
   const session = await auth()
   if (!session?.user?.id) {
     throw new Error("Please log in to spin")
   }
 
+  const cfg = await getSpinConfig()
   const userId = session.user.id
 
   // ── Daily spin limit ──
@@ -45,7 +66,7 @@ export async function spin(): Promise<SpinResult> {
     create: { userId, date: today, spinsUsed: 0 },
   })
 
-  if (usage.spinsUsed >= DAILY_SPIN_LIMIT) {
+  if (usage.spinsUsed >= cfg.dailySpinLimit) {
     throw new Error("Daily spin limit reached. Come back tomorrow!")
   }
 
@@ -57,7 +78,7 @@ export async function spin(): Promise<SpinResult> {
 
   if (recentSpin) {
     const elapsed = Date.now() - recentSpin.createdAt.getTime()
-    if (elapsed < 3000) {
+    if (elapsed < cfg.antiSpamCooldownMs) {
       throw new Error("Please wait before spinning again")
     }
   }
@@ -87,12 +108,12 @@ export async function spin(): Promise<SpinResult> {
 
       // ── Weekly coupon check ──
       if (couponCode) {
-        // Clean up stale pending records (>10 min old) so they don't orphan
+        // Clean up stale pending records so they don't orphan
         await prisma.spinHistory.updateMany({
           where: {
             userId,
             status: "pending",
-            createdAt: { lt: new Date(Date.now() - 10 * 60 * 1000) },
+            createdAt: { lt: new Date(Date.now() - cfg.stalePendingMinutes * 60 * 1000) },
           },
           data: { status: "skipped" },
         })
@@ -102,12 +123,12 @@ export async function spin(): Promise<SpinResult> {
             userId,
             couponCode: { not: null },
             status: { in: ["active", "redeemed"] },
-            createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+            createdAt: { gte: new Date(Date.now() - weeklyMs(cfg.weeklyClaimPeriodDays)) },
           },
         })
 
         if (weeklyClaim) {
-          // Already claimed this week — record as skipped, return fallback
+          const nextEligible = new Date(weeklyClaim.createdAt.getTime() + weeklyMs(cfg.weeklyClaimPeriodDays))
           await prisma.spinHistory.create({
             data: {
               userId,
@@ -121,10 +142,10 @@ export async function spin(): Promise<SpinResult> {
             where: { userId_date: { userId, date: today } },
             data: { spinsUsed: { increment: 1 } },
           })
-          return { offerId: null, reward: "Better Luck Next Time", couponCode: null, color: "#E5E7EB" }
+          return { offerId: null, reward: "Better Luck Next Time", couponCode: null, color: "#E5E7EB", nextEligibleDate: nextEligible.toISOString() }
         }
 
-        // First coupon this week — save as pending, create CouponCode + UserCoupon on confirm
+        // First coupon this period — save as pending
         const record = await prisma.spinHistory.create({
           data: {
             userId,
@@ -189,7 +210,6 @@ export async function confirmSpin(spinHistoryId: string): Promise<void> {
 
   const today = todayDate()
 
-  // Create CouponCode entry for the spin reward
   const coupon = await prisma.couponCode.create({
     data: {
       code: record.couponCode || generateCouponSuffix(),
@@ -208,7 +228,6 @@ export async function confirmSpin(spinHistoryId: string): Promise<void> {
     },
   })
 
-  // Link it to the user via UserCoupon
   await prisma.userCoupon.create({
     data: {
       userId: session.user.id,
@@ -217,7 +236,6 @@ export async function confirmSpin(spinHistoryId: string): Promise<void> {
     },
   })
 
-  // Mark spin history as active
   await prisma.spinHistory.update({
     where: { id: spinHistoryId },
     data: { status: "active" },
@@ -255,8 +273,10 @@ export async function getRemainingSpins(): Promise<{
   nextReset: string
 }> {
   const session = await auth()
+  const cfg = await getSpinConfig()
+
   if (!session?.user?.id) {
-    return { used: 0, max: DAILY_SPIN_LIMIT, remaining: DAILY_SPIN_LIMIT, nextReset: "" }
+    return { used: 0, max: cfg.dailySpinLimit, remaining: cfg.dailySpinLimit, nextReset: "" }
   }
 
   const today = todayDate()
@@ -265,13 +285,13 @@ export async function getRemainingSpins(): Promise<{
   })
 
   const used = usage?.spinsUsed ?? 0
-  const remaining = Math.max(0, DAILY_SPIN_LIMIT - used)
+  const remaining = Math.max(0, cfg.dailySpinLimit - used)
 
   const tomorrow = new Date(today)
   tomorrow.setDate(tomorrow.getDate() + 1)
   const nextReset = tomorrow.toISOString()
 
-  return { used, max: DAILY_SPIN_LIMIT, remaining, nextReset }
+  return { used, max: cfg.dailySpinLimit, remaining, nextReset }
 }
 
 export async function getWeeklyCouponStatus(): Promise<{
@@ -279,6 +299,8 @@ export async function getWeeklyCouponStatus(): Promise<{
   nextEligibleDate: string | null
 }> {
   const session = await auth()
+  const cfg = await getSpinConfig()
+
   if (!session?.user?.id) {
     return { claimed: false, nextEligibleDate: null }
   }
@@ -297,7 +319,7 @@ export async function getWeeklyCouponStatus(): Promise<{
     return { claimed: false, nextEligibleDate: null }
   }
 
-  const nextEligible = new Date(claim.assignedAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const nextEligible = new Date(claim.assignedAt.getTime() + weeklyMs(cfg.weeklyClaimPeriodDays))
   return { claimed: true, nextEligibleDate: nextEligible.toISOString() }
 }
 
@@ -311,7 +333,6 @@ export async function getSpinHistory(userId?: string) {
 }
 
 export async function getUserRewards(userId: string) {
-  // Returns user coupons from the new UserCoupon model
   return prisma.userCoupon.findMany({
     where: {
       userId,

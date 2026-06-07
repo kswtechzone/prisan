@@ -1,6 +1,7 @@
 import { SpinWheel } from "@/components/spin-wheel"
 import { getActiveOffers, getRemainingSpins, getWeeklyCouponStatus } from "@/lib/actions"
 import { spinAction } from "@/lib/actions"
+import { auth } from "@/lib/auth"
 import { Sparkles } from "lucide-react"
 import Link from "next/link"
 import type { Metadata } from "next"
@@ -19,25 +20,20 @@ export const metadata: Metadata = {
 }
 
 export default async function SpinPage() {
+  const session = await auth()
   const [offers, remainingSpins, weeklyStatus] = await Promise.all([
     getActiveOffers(),
     getRemainingSpins(),
     getWeeklyCouponStatus(),
   ])
 
-  const segments = offers.map((o) => ({
-    label: o.title,
-    probability: o.probability,
-    color: o.color || "#8B5E3C",
-  }))
-
-  if (segments.length === 0) {
-    segments.push({
-      label: "Better Luck Next Time",
-      probability: 100,
-      color: "#E5E7EB",
-    })
-  }
+  const segments = offers
+    .filter((o) => o.rewardType !== "none")
+    .map((o) => ({
+      label: o.title,
+      probability: o.probability,
+      color: o.color || "#8B5E3C",
+    }))
 
   return (
     <div className="min-h-[calc(100vh-4rem)] px-4 py-12">
@@ -66,6 +62,7 @@ export default async function SpinPage() {
             }}
             initialRemaining={remainingSpins}
             initialWeeklyStatus={weeklyStatus}
+            isAuthenticated={!!session?.user}
           />
         </div>
 
@@ -83,7 +80,7 @@ export default async function SpinPage() {
                 >
                   <div
                     className="w-10 h-10 rounded-full shrink-0"
-                    style={{ backgroundColor: offer.color || "#8B5E3C" + "20" }}
+                    style={{ backgroundColor: (offer.color || "#8B5E3C") + "20" }}
                   />
                   <div>
                     <p className="font-semibold text-sm">{offer.title}</p>

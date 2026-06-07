@@ -1661,3 +1661,40 @@ export async function createNotification(data: {
 }) {
   await prisma.notification.create({ data })
 }
+
+// ── Admin: Spin Config ──
+
+export async function getSpinConfig() {
+  await requireAdmin()
+  const config = await prisma.spinConfig.findFirst()
+  return (
+    config ?? {
+      id: "default",
+      dailySpinLimit: 10,
+      weeklyClaimPeriodDays: 7,
+      antiSpamCooldownMs: 3000,
+      stalePendingMinutes: 10,
+    }
+  )
+}
+
+export async function updateSpinConfig(data: {
+  dailySpinLimit?: number
+  weeklyClaimPeriodDays?: number
+  antiSpamCooldownMs?: number
+  stalePendingMinutes?: number
+}) {
+  await requireAdmin()
+  const existing = await prisma.spinConfig.findFirst()
+  if (existing) {
+    await prisma.spinConfig.update({
+      where: { id: existing.id },
+      data,
+    })
+  } else {
+    await prisma.spinConfig.create({
+      data: { id: "default", ...data },
+    })
+  }
+  revalidatePath("/admin/spin-settings")
+}

@@ -4,12 +4,12 @@ import bcrypt from "bcryptjs"
 const prisma = new PrismaClient()
 
 async function main() {
-  const adminPassword = await bcrypt.hash("admin123", 12)
+  const adminPassword = await bcrypt.hash("Pinky@1234", 12)
   await prisma.user.upsert({
-    where: { email: "admin@prisanbeauty.com" },
+    where: { email: "pinky@prisanbeauty.com" },
     update: {},
     create: {
-      email: "admin@prisanbeauty.com",
+      email: "pinky@prisanbeauty.com",
       fullName: "Admin",
       password: adminPassword,
       role: "admin",
@@ -19,34 +19,10 @@ async function main() {
   await Promise.all([
     prisma.stylist.create({
       data: {
-        name: "Sophia Chen",
+        name: "Priyanka Singh",
         bio: "Master stylist with 15+ years of experience specializing in precision cuts and balayage.",
       },
-    }),
-    prisma.stylist.create({
-      data: {
-        name: "Isabella Martinez",
-        bio: "Color specialist known for transformative blonding techniques and creative color.",
-      },
-    }),
-    prisma.stylist.create({
-      data: {
-        name: "Olivia Williams",
-        bio: "Nail artist and skincare expert with a passion for custom designs and facials.",
-      },
-    }),
-    prisma.stylist.create({
-      data: {
-        name: "Mia Johnson",
-        bio: "Makeup artist and aesthetician specializing in bridal and editorial looks.",
-      },
-    }),
-    prisma.stylist.create({
-      data: {
-        name: "Emma Davis",
-        bio: "Massage therapist certified in deep tissue, hot stone, and aromatherapy techniques.",
-      },
-    }),
+    })
   ])
 
   await prisma.seoMeta.upsert({
@@ -154,7 +130,21 @@ async function main() {
     await prisma.spinOffer.createMany({ data: spinOffers })
   }
 
-  console.log("Seeded admin user, stylists, FAQs, SEO meta, blog posts, and spin offers")
+  // ── SpinConfig defaults ──
+  const existingConfig = await prisma.spinConfig.count()
+  if (existingConfig === 0) {
+    await prisma.spinConfig.create({
+      data: {
+        id: "default",
+        dailySpinLimit: 10,
+        weeklyClaimPeriodDays: 7,
+        antiSpamCooldownMs: 3000,
+        stalePendingMinutes: 10,
+      },
+    })
+  }
+
+  console.log("Seeded admin user, stylists, FAQs, SEO meta, blog posts, spin offers, and spin config")
 }
 
 main()

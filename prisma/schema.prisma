@@ -261,6 +261,17 @@ model DailySpinUsage {
   @@map("daily_spin_usage")
 }
 
+model SpinConfig {
+  id                    String   @id @default(cuid())
+  dailySpinLimit        Int      @default(10) @map("daily_spin_limit")
+  weeklyClaimPeriodDays Int      @default(7) @map("weekly_claim_period_days")
+  antiSpamCooldownMs    Int      @default(3000) @map("anti_spam_cooldown_ms")
+  stalePendingMinutes   Int      @default(10) @map("stale_pending_minutes")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("spin_config")
+}
+
 model UserSession {
   id             String    @id @default(cuid())
   userId         String    @map("user_id")
