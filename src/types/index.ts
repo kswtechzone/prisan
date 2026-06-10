@@ -50,3 +50,10 @@ export interface Invoice {
   couponTitle?: string
   discountPercent?: number
 }
+
+export interface CourseBookingFormData {
+  courseId: string
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+}

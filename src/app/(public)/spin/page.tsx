@@ -39,7 +39,7 @@ export default async function SpinPage() {
     <div className="min-h-[calc(100vh-4rem)] px-4 py-12">
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-12">
-          <div className="flex justify-center mb-4">
+          <div className="hidden md:flex justify-center mb-4">
             <div className="w-16 h-16 bg-luxury-gold/10 rounded-2xl flex items-center justify-center">
               <Sparkles className="w-8 h-8 text-luxury-gold" />
             </div>

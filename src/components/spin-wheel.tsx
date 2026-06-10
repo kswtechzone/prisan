@@ -471,40 +471,43 @@ export function SpinWheel({
       {/* Weekly claim confirmation modal */}
       {pendingConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-slide-up">
+          <div className="max-w-sm w-full text-center shadow-2xl animate-slide-up rounded-3xl overflow-hidden">
             <div
-              className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+              className="px-8 pb-6 pt-10"
               style={{ backgroundColor: pendingConfirm.color + "20" }}
             >
-              <Gift
-                className="w-8 h-8"
-                style={{ color: pendingConfirm.color }}
-              />
-            </div>
-            <h3 className="text-2xl font-display font-bold text-luxury-charcoal mb-2">
-              You Won!
-            </h3>
-            <p
-              className="text-lg font-semibold mb-4"
-              style={{ color: pendingConfirm.color }}
-            >
-              {pendingConfirm.reward}
-            </p>
-            <div className="flex gap-3">
-              <Button
-                onClick={handleSkip}
-                variant="outline"
-                className="flex-1"
+              <div
+                className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-white/80"
               >
-                Skip
-              </Button>
-              <Button onClick={handleConfirm} className="flex-1">
-                Claim Reward
-              </Button>
+                <Gift
+                  className="w-8 h-8"
+                  style={{ color: pendingConfirm.color }}
+                />
+              </div>
+              <h3 className="text-2xl font-display font-bold text-luxury-charcoal mb-1">
+                You Won!
+              </h3>
+              <p className="text-lg font-semibold text-luxury-charcoal">
+                {pendingConfirm.reward}
+              </p>
             </div>
-            <p className="text-xs text-red-500 text-center mt-3">
-              This counts as your weekly reward. You can only claim 1 per week.
-            </p>
+            <div className="bg-white px-8 pb-8 pt-6">
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleSkip}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Skip
+                </Button>
+                <Button onClick={handleConfirm} className="flex-1">
+                  Claim Reward
+                </Button>
+              </div>
+              <p className="text-xs text-red-500 text-center mt-3">
+                This counts as your weekly reward. You can only claim 1 per week.
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -512,68 +515,71 @@ export function SpinWheel({
       {/* Result modal */}
       {result && !pendingConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl animate-slide-up">
+          <div className="max-w-sm w-full text-center shadow-2xl animate-slide-up rounded-3xl overflow-hidden">
             <div
-              className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center"
+              className="px-8 pb-6 pt-10"
               style={{ backgroundColor: result.color + "20" }}
             >
-              <Gift
-                className="w-8 h-8"
-                style={{ color: result.color }}
-              />
-            </div>
-            <h3 className="text-2xl font-display font-bold text-luxury-charcoal mb-2">
-              {result.reward === "Better Luck Next Time" && result.nextEligibleDate
-                ? "Already Claimed!"
-                : result.reward === "Better Luck Next Time"
-                ? "Better Luck!"
-                : result.error
-                ? "Oops!"
-                : "Congratulations!"}
-            </h3>
-            <p
-              className="text-lg font-semibold mb-4"
-              style={{ color: result.color }}
-            >
-              {result.error
-                ? result.message
-                : result.reward === "Better Luck Next Time" && result.nextEligibleDate
-                ? "You've already claimed a reward this week"
-                : result.reward}
-            </p>
-            {result.nextEligibleDate && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-                <p className="text-sm text-amber-800 flex items-center justify-center gap-2">
-                  <Clock className="w-4 h-4 shrink-0" />
-                  Next claim available <strong>{getRelativeTime(result.nextEligibleDate)}</strong>
-                </p>
-              </div>
-            )}
-            {result.couponCode && (
-              <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                <p className="text-xs text-gray-500 mb-1">Your Coupon Code</p>
-                <p className="text-xl font-bold tracking-wider text-luxury-charcoal font-mono">
-                  {result.couponCode}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Show this code at our studio to redeem
-                </p>
-              </div>
-            )}
-            {!isAuthenticated && result.error ? (
-              <Link
-                href="/register"
-                className="inline-flex items-center justify-center w-full rounded-xl bg-luxury-gold text-white text-lg font-bold px-8 py-3 hover:bg-luxury-gold/90 transition-colors"
+              <div
+                className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-white/80"
               >
-                Create Account & Play
-              </Link>
-            ) : (
-              <Button onClick={closeResult} className="w-full">
-                {result.reward === "Better Luck Next Time"
-                  ? "Try Again"
-                  : "Awesome!"}
-              </Button>
-            )}
+                <Gift
+                  className="w-8 h-8"
+                  style={{ color: result.color }}
+                />
+              </div>
+              <h3 className="text-2xl font-display font-bold text-luxury-charcoal mb-1">
+                {result.reward === "Better Luck Next Time" && result.nextEligibleDate
+                  ? "Already Claimed!"
+                  : result.reward === "Better Luck Next Time"
+                  ? "Better Luck!"
+                  : result.error
+                  ? "Oops!"
+                  : "Congratulations!"}
+              </h3>
+              <p className="text-lg font-semibold text-luxury-charcoal">
+                {result.error
+                  ? result.message
+                  : result.reward === "Better Luck Next Time" && result.nextEligibleDate
+                  ? "You've already claimed a reward this week"
+                  : result.reward}
+              </p>
+            </div>
+            <div className="bg-white px-8 pb-8 pt-6">
+              {result.nextEligibleDate && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+                  <p className="text-sm text-amber-800 flex items-center justify-center gap-2">
+                    <Clock className="w-4 h-4 shrink-0" />
+                    Next claim available <strong>{getRelativeTime(result.nextEligibleDate)}</strong>
+                  </p>
+                </div>
+              )}
+              {result.couponCode && (
+                <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                  <p className="text-xs text-gray-500 mb-1">Your Coupon Code</p>
+                  <p className="text-xl font-bold tracking-wider text-luxury-charcoal font-mono">
+                    {result.couponCode}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Show this code at our studio to redeem
+                  </p>
+                </div>
+              )}
+              {!isAuthenticated && result.error ? (
+                <Link
+                  href="/register"
+                  className="inline-flex items-center justify-center w-full rounded-xl bg-luxury-gold text-white text-lg font-bold px-8 py-3 hover:bg-luxury-gold/90 transition-colors"
+                >
+                  Create Account & Play
+                </Link>
+              ) : (
+                <Button onClick={closeResult} className="w-full">
+                  {result.reward === "Better Luck Next Time"
+                    ? "Try Again"
+                    : "Awesome!"}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       )}

@@ -6,7 +6,7 @@ import { prisma } from "./prisma"
 import { auth, signIn, signOut } from "./auth"
 import { sendBookingConfirmation, sendAdminNotification, sendStatusUpdate } from "./mail"
 import { format } from "date-fns"
-import type { BookingFormData, CouponValidationResult } from "@/types"
+import type { BookingFormData, CouponValidationResult, CourseBookingFormData } from "@/types"
 import { calculateInvoice, type CouponInfo } from "./billing"
 
 async function requireAdmin() {
@@ -1595,6 +1595,152 @@ export async function getEventBookings(eventId: string) {
   await requireAdmin()
   return prisma.eventBooking.findMany({
     where: { eventId },
+    include: { user: { select: { fullName: true, email: true, mobile: true } } },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+// ── Courses / Training ──
+
+export async function getActiveCourses() {
+  const courses = await prisma.course.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: "desc" },
+  })
+  const bookings = await prisma.courseBooking.groupBy({
+    by: ["courseId"],
+    _count: true,
+  })
+  const countMap = Object.fromEntries(bookings.map((b) => [b.courseId, b._count]))
+  return courses.map((c) => ({ ...c, bookingCount: countMap[c.id] || 0 }))
+}
+
+export async function getCourses() {
+  await requireAdmin()
+  return prisma.course.findMany({
+    include: { _count: { select: { bookings: true } } },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+export async function getCourse(id: string) {
+  return prisma.course.findUnique({
+    where: { id },
+    include: { _count: { select: { bookings: true } } },
+  })
+}
+
+export async function createCourse(data: {
+  title: string
+  description?: string
+  image?: string
+  price: number
+  duration?: string
+  startDate?: string
+  endDate?: string
+  capacity: number
+  category?: string
+}) {
+  await requireAdmin()
+  const course = await prisma.course.create({
+    data: {
+      title: data.title,
+      description: data.description,
+      image: data.image,
+      price: data.price,
+      duration: data.duration || null,
+      startDate: data.startDate ? new Date(data.startDate) : null,
+      endDate: data.endDate ? new Date(data.endDate) : null,
+      capacity: data.capacity,
+      category: data.category || null,
+    },
+  })
+  revalidatePath("/admin/courses")
+  revalidatePath("/courses")
+  return course
+}
+
+export async function updateCourse(
+  id: string,
+  data: {
+    title?: string
+    description?: string
+    image?: string
+    price?: number
+    duration?: string
+    startDate?: string
+    endDate?: string
+    capacity?: number
+    category?: string
+    isActive?: boolean
+  }
+) {
+  await requireAdmin()
+  const { startDate, endDate, ...rest } = data
+  const updateData: any = { ...rest }
+  if (startDate !== undefined) updateData.startDate = startDate ? new Date(startDate) : null
+  if (endDate !== undefined) updateData.endDate = endDate ? new Date(endDate) : null
+  await prisma.course.update({ where: { id }, data: updateData })
+  revalidatePath("/admin/courses")
+  revalidatePath("/courses")
+}
+
+export async function deleteCourse(id: string) {
+  await requireAdmin()
+  await prisma.course.delete({ where: { id } })
+  revalidatePath("/admin/courses")
+  revalidatePath("/courses")
+}
+
+export async function bookCourse(data: CourseBookingFormData) {
+  const session = await auth()
+  const course = await prisma.course.findUnique({
+    where: { id: data.courseId },
+    include: { _count: { select: { bookings: true } } },
+  })
+  if (!course || !course.isActive) throw new Error("Course not found")
+  if (course.capacity > 0 && course._count.bookings >= course.capacity) {
+    throw new Error("Course is fully booked")
+  }
+
+  const booking = await prisma.courseBooking.create({
+    data: {
+      courseId: data.courseId,
+      userId: session?.user?.id || null,
+      customerName: data.customerName,
+      customerEmail: data.customerEmail,
+      customerPhone: data.customerPhone,
+    },
+  })
+
+  await prisma.notification.create({
+    data: {
+      role: "admin",
+      title: "New Course Booking",
+      message: `${data.customerName} booked for "${course.title}"`,
+      link: "/admin/courses",
+      type: "booking",
+    },
+  }).catch(() => {})
+
+  revalidatePath("/courses")
+  return booking
+}
+
+export async function getUserCourseBookings() {
+  const session = await auth()
+  if (!session?.user?.id) return []
+  return prisma.courseBooking.findMany({
+    where: { userId: session.user.id },
+    include: { course: true },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+export async function getCourseBookings(courseId: string) {
+  await requireAdmin()
+  return prisma.courseBooking.findMany({
+    where: { courseId },
     include: { user: { select: { fullName: true, email: true, mobile: true } } },
     orderBy: { createdAt: "desc" },
   })

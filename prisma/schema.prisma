@@ -149,6 +149,7 @@ model User {
   coupons        UserCoupon[]
   bookings       Booking[]
   eventBookings  EventBooking[]
+  courseBookings CourseBooking[]
   notifications  Notification[]
 
   @@map("users")
@@ -327,6 +328,40 @@ model EventBooking {
   user      User?    @relation(fields: [userId], references: [id])
 
   @@map("event_bookings")
+}
+
+model Course {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  image       String?
+  price       Float           @default(0)
+  duration    String?         // e.g. "2 hours", "Full day", "4 weeks"
+  startDate   DateTime? @map("start_date")
+  endDate     DateTime? @map("end_date")
+  capacity    Int             @default(0)
+  category    String?         // "makeup", "skincare", "hair" etc
+  isActive    Boolean         @default(true) @map("is_active")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+  bookings    CourseBooking[]
+
+  @@map("courses")
+}
+
+model CourseBooking {
+  id            String   @id @default(cuid())
+  courseId      String   @map("course_id")
+  userId        String?  @map("user_id")
+  customerName  String   @map("customer_name")
+  customerEmail String   @map("customer_email")
+  customerPhone String   @map("customer_phone")
+  status        String   @default("confirmed")
+  createdAt     DateTime @default(now()) @map("created_at")
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user          User?    @relation(fields: [userId], references: [id])
+
+  @@map("course_bookings")
 }
 
 model Notification {

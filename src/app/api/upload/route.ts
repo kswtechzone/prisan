@@ -1,11 +1,35 @@
 import { NextResponse } from "next/server"
-import { writeFile, mkdir } from "fs/promises"
+import { writeFile, mkdir, access } from "fs/promises"
 import path from "path"
 import sharp from "sharp"
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/avif"]
 const MAX_WIDTH = 1200
 const JPEG_QUALITY = 70
+
+async function getBaseDir(): Promise<string> {
+  // 1. Explicit env var wins
+  if (process.env.UPLOAD_DIR) return process.env.UPLOAD_DIR
+
+  const cwd = process.cwd()
+
+  // 2. In dev, cwd is project root — public/ exists
+  const publicDir = path.join(cwd, "public")
+  try {
+    await access(publicDir)
+    return publicDir
+  } catch {
+    // 3. In standalone output, cwd is .next/standalone — check parent
+    const parentPublic = path.join(cwd, "..", "public")
+    try {
+      await access(parentPublic)
+      return parentPublic
+    } catch {
+      // 4. Fallback: create public/ alongside server
+      return publicDir
+    }
+  }
+}
 
 function saveFile(raw: Buffer, subDir: string) {
   return new Promise<{ url: string; filename: string }>(async (resolve, reject) => {
@@ -21,7 +45,7 @@ function saveFile(raw: Buffer, subDir: string) {
       }
 
       const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`
-      const baseDir = process.env.UPLOAD_DIR || path.join(process.cwd(), "public")
+      const baseDir = await getBaseDir()
       const uploadDir = path.join(baseDir, "uploads", subDir)
       const filepath = path.join(uploadDir, filename)
 

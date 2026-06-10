@@ -25,9 +25,10 @@ self.addEventListener("fetch", (event) => {
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)
         .then((response) => {
-          if (response.ok) {
+          if (response.ok && !response.bodyUsed) {
+            const cloned = response.clone()
             caches.open(CACHE).then((cache) => {
-              cache.put(event.request, response.clone())
+              cache.put(event.request, cloned)
             })
           }
           return response

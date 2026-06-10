@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Menu, X, User, Sparkles, Calendar } from "lucide-react"
+import { Menu, X, User, Sparkles, Calendar, GraduationCap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { NotificationBell } from "@/components/ui/notification-bell"
 import { cn } from "@/lib/utils"
@@ -19,6 +19,7 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
   { href: "/gallery", label: "Gallery" },
+  { href: "/courses", label: "Courses", icon: GraduationCap },
   { href: "/events", label: "Events", icon: Calendar },
   { href: "/spin", label: "Spin & Win", icon: Sparkles },
   { href: "/rewards", label: "Rewards" },

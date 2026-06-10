@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import Image from "next/image"
-import { LayoutDashboard, CalendarDays, Scissors, Users, Image as ImageIcon, HelpCircle, Search, FileText, Gift, TrendingUp, LogOut, Ticket, Percent, Settings, PartyPopper, SlidersHorizontal } from "lucide-react"
+import { LayoutDashboard, CalendarDays, Scissors, Users, Image as ImageIcon, HelpCircle, Search, FileText, Gift, TrendingUp, LogOut, Ticket, Percent, Settings, PartyPopper, SlidersHorizontal, GraduationCap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { logoutAction } from "@/lib/actions"
 
@@ -20,6 +20,7 @@ const adminLinks = [
   { href: "/admin/coupons", label: "Coupons", icon: Ticket },
   { href: "/admin/general-coupons", label: "General Coupons", icon: Percent },
   { href: "/admin/analytics", label: "Analytics", icon: TrendingUp },
+  { href: "/admin/courses", label: "Courses", icon: GraduationCap },
   { href: "/admin/events", label: "Events", icon: PartyPopper },
   { href: "/admin/seo", label: "SEO", icon: Search },
   { href: "/admin/settings", label: "Settings", icon: Settings },
